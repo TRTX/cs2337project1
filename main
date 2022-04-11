@@ -1,0 +1,181 @@
+//this is what was submitted, 7/7 points. I am aware the copy constructor DOES NOT work, but it didn't need to work.
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <cmath>
+using namespace std;
+
+class Matrix{
+   public:
+   ifstream inFS; 
+   ofstream outFS;
+   int rows;
+   int cols;
+   int readrow;
+   int readcol;
+   double readval;
+   vector<vector<double>> grid;
+   public:
+   Matrix(){
+      rows = 0;
+      cols = 0;
+      vector<vector<double>> grid(0, vector<double> (0, 0));
+   }
+   Matrix(const Matrix& target){
+      rows = target.rows;
+      cols = target.cols;
+      vector<vector<double>> grid(0, vector<double> (0, 0));
+      for(int r=0 ; r<target.rows ; ++r){
+         grid.push_back(vector<double> (target.cols, 0));
+      }
+      for(int r=0 ; r<target.rows ; ++r){
+         for(int c=0 ; c<target.cols ; ++c){
+            grid[r][c] = target.grid[r][c];
+         }
+      }
+   }
+   void setRowCount (int sizer){
+      rows = sizer;
+   }
+   void setColCount (int sizec){
+      cols = sizec;
+   }
+   
+   void loadFromFile(string filename){
+      inFS.open(filename);
+      if (!inFS.is_open()) 
+         cout << "Unable to open file" << endl;
+      else{
+         inFS >> readrow;
+         inFS >> readcol;
+         setRowCount(readrow);
+         setColCount(readcol);
+         for(int r=0 ; r<getRowCount() ; ++r){
+            grid.push_back(vector<double> (getColCount(), 0));
+         }
+         for(int r=0 ; r<getRowCount() ; ++r){
+            for(int c=0 ; c<getColCount() ; ++c){
+               inFS >> readval;
+               grid[r][c] = readval;
+            }
+         }
+      }
+      inFS.close();
+   }
+   void saveToFile(string filename){
+      outFS.open(filename);
+      if (!outFS.is_open())
+         cout << "Unable to open file" << endl;
+      else{
+         outFS << getRowCount() << endl;
+         outFS << getColCount() << endl;
+         for(int r=0 ; r<getRowCount() ; ++r){
+            for(int c=0 ; c<getColCount() ; ++c){
+               outFS << grid[r][c] << " ";
+            }
+         outFS << endl;
+         }
+      }
+      outFS.close();
+   }
+   
+   int getRowCount() {
+      return rows;
+   }
+   int getColCount() {  
+      return cols;
+   }
+   void display() {
+      cout << fixed;
+      cout << setprecision(2);
+
+      for(int r=0 ; r<getRowCount() ; ++r){
+         cout << " | ";
+         for(int c=0 ; c<getColCount() ; ++c){
+            if(c==0)
+               cout << setw(6) << grid[r][c];
+            else{
+               cout << " ";
+               cout << setw(6) << grid[r][c];
+            }
+         }
+         cout << " | " << endl;
+      }
+   }
+   bool setEntry(int row, int col, double value){
+      if(row > getRowCount() || col > getColCount())
+         return false;
+      else{
+         grid[row][col] = value;
+         return true;
+      }
+   }
+   double getEntry(int row, int col){
+      return grid[row][col];
+   }
+   double getNorm() {
+      double sum = 0;
+      for(int r=0 ; r<getRowCount() ; ++r){
+         for(int c=0 ; c<getColCount() ; ++c){
+            sum+=grid[r][c] * grid[r][c];
+         }
+      }
+      return sqrt(sum);
+   }
+   void transpose() {
+      int oldRows = getRowCount();
+      int oldCols = getColCount();
+      vector<vector<double>> oldgrid(oldRows, vector<double> (oldCols, 0));
+      for(int r=0 ; r<oldRows ; ++r){
+         for(int c=0 ; c<oldCols ; ++c){
+            oldgrid[r][c] = grid[r][c];
+         }
+      }
+      setRowCount(oldCols);
+      setColCount(oldRows);
+      while(!grid.empty()){
+         grid.pop_back();
+      }
+      for(int r=0 ; r<getRowCount() ; ++r){
+         grid.push_back(vector<double> (getColCount(), 0));
+      }
+      for(int r=0 ; r<getRowCount() ; ++r){
+         for(int c=0 ; c<getColCount() ; ++c){
+            grid[r][c] = oldgrid[c][r];
+         }
+      }
+   }
+   
+};
+
+int main(){
+   string input;
+   int userRow;
+   int userCol;
+   double userVal;
+   Matrix mat;
+   cout << "Enter the file to load: " << endl;
+   cin >> input;
+   mat.loadFromFile(input);
+   if(mat.getRowCount() > 0){
+   mat.display();
+   cout << "The Frobenius Norm is " << mat.getNorm() << endl;
+   cout << "Enter the row: " << endl;
+   cin >> userRow;
+   cout << "Enter the col: " << endl;
+   cin >> userCol;
+   cout << "Enter the value: " << endl;
+   cin >> userVal;
+   mat.setEntry(userRow, userCol, userVal);
+   // Matrix mat2 = mat;
+   // mat2.transpose();
+   mat.transpose();
+   mat.saveToFile("A1.txt");
+   mat.transpose();
+   mat.display();
+   }
+
+   return 0;
+}
